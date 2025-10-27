@@ -3,21 +3,15 @@ import CardHeader from "@/components/Offer";
 import EmailForm from "@/components/EmailForm";
 
 export default function Home() {
-  const siteLogo =
-    process.env.NEXT_PUBLIC_LOGO ||
-    "https://res.cloudinary.com/dyv1yduua/image/upload/v1733392810/speaker_oiuezn.svg";
+  const siteLogo = "/logo-nv.png";
   // Data from env
-  const features =
-    process.env.NEXT_PUBLIC_FEATURES ||
-    "Sectoral templates, Sectoral templates, Sectoral templates";
-  const price = process.env.NEXT_PUBLIC_CURRENT_PRICE || "";
-  const discountPrice = process.env.NEXT_PUBLIC_DISCOUNT_PRICE || "";
-  const date = process.env.NEXT_PUBLIC_LAUNCH_DATE || "2026-01-01";
+  const features = "Seleciona o Curso Perfeito, Teste Vocacional, Bolsas de Estudo, Suporte Personalizado";
+  const price = "200";
+  const discountPrice = "100";
+  const date = "2025-11-01";
   const title =
-    process.env.NEXT_PUBLIC_TITLE ||
-    "Join the waitlist for the SAAS code library.";
-  const description =
-    process.env.NEXT_PUBLIC_OFFER_TITLE || "Add offer title from env";
+    "Entre na lista de espera do Trilho Académico.";
+  const description = "Desconto exclusivo de 50% no lançamento para membros da lista de espera, valido por um mês.";
 
   console.log(price);
   return (

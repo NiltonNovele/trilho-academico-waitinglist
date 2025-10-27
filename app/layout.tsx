@@ -5,10 +5,8 @@ import { Toaster } from "react-hot-toast";
 
 const inter = Inter({ subsets: ["latin"] });
 
-const siteName = process.env.NEXT_PUBLIC_SITE_NAME ?? "Quick Waitlist";
-const siteDescription =
-  process.env.NEXT_PUBLIC_SITE_DESCRIPTION ??
-  "Entre na lista de espera do Trilho Académico.";
+const siteName = "Lista de Espera";
+const siteDescription = "Entre na lista de espera do Trilho Académico.";
 
 export const metadata: Metadata = {
   title: siteName,
