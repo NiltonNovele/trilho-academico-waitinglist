@@ -4,7 +4,7 @@ import Link from "next/link";
 const LinkedinLink =
   process.env.NEXT_PUBLIC_LINKEDIN || "https://www.linkedin.com/company/synctechx/?viewAsMember=true";
 const TwitterLink = process.env.NEXT_PUBLIC_TWITTER || "https://x.com/synctechx";
-const TiktokLink = process.env.NEXT_PUBLIC_TIKTOK || "https://www.github.com/";
+const TiktokLink = process.env.NEXT_PUBLIC_TIKTOK || "#";
 const InstagramLink = process.env.NEXT_PUBLIC_INSTAGRAM || "https://www.instagram.com/synctechx.mz";
 
 const CardFooter = () => {
