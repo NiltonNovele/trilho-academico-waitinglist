@@ -159,7 +159,7 @@ className="p-6 space-y-8 flex flex-col justify-center bg-white/80 backdrop-blur-
           required
           value={formData.text}
           onChange={handleInputChange}
-          placeholder="Partilha um desafio que encontraste no acesso ao ensino superior..."
+          placeholder="Partilha um desafio que encontras ou que encontraste no acesso ao ensino superior..."
           className="w-full min-h-[120px] resize-none border rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <Lightbulb
