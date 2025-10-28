@@ -1,201 +1,249 @@
 "use client";
-import React, { useTransition, useState, useEffect } from "react";
+import React, { useState, useTransition } from "react";
 import toast from "react-hot-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-Hourglass,
-LoaderCircle,
-Mail,
-User,
-Lightbulb,
-Sparkles,
-Smile,
-} from "lucide-react";
+import { LoaderCircle, User, Smile, Phone, AtSign, Hourglass, Lightbulb } from "lucide-react";
 import { motion } from "framer-motion";
 
-const EmailForm = ({ date, title }: { date: string; title: string }) => {
-const [isPending, startTransaction] = useTransition();
-const [isLoading, setIsLoading] = useState(false);
-const [progress, setProgress] = useState(0);
-const [formData, setFormData] = useState({
-name: "",
-email: "",
-text: "",
-});
+const BACKEND_URL = "http://localhost:5000";
 
-const getDaysLeft = (): number => {
-const endDate = new Date(date);
-const today = new Date();
-const diffTime = endDate.getTime() - today.getTime();
-return Math.max(0, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
-};
-
-useEffect(() => {
-const filledFields = Object.values(formData).filter(Boolean).length;
-setProgress((filledFields / 3) * 100);
-}, [formData]);
-
-const handleInputChange = (
-e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
-) => {
-const { name, value } = e.target;
-setFormData((prev) => ({ ...prev, [name]: value }));
-};
-
-const handleSubmit = async (event: React.SyntheticEvent) => {
-event.preventDefault();
-const form = event.target as HTMLFormElement;
-
-
-const { name, email } = formData;
-if (!email || !name) {
-  toast.error("Por favor, preencha todos os campos! 😅");
-  return;
+interface EmailFormProps {
+  title: string;
+  endDate?: string;
 }
 
-startTransaction(async () => {
-  setIsLoading(true);
-  try {
-    const res = await fetch("https://formspree.io/f/mdknweok", {
-      method: "POST",
-      body: new FormData(form),
-    });
-
-    if (res.ok) {
-      toast.success("🎉 Obrigado por te inscreveres!");
-      setFormData({ name: "", email: "", text: "" });
-    } else {
-      toast.error("Algo correu mal 😢");
-    }
-  } catch (error) {
-    console.error("Form submission error:", error);
-    toast.success("🎉 Obrigado por te inscreveres!");
-  } finally {
-    setIsLoading(false);
-  }
-});
-
+const countryPlaceholders: Record<string, string> = {
+  "258": "841234567",
+  "351": "912345678",
+  "55": "11987654321",
+  "27": "761915804",
+  "44": "07123456789",
+  "1": "5551234567",
+  "357": "99123456",
+  "60": "123456789",
+  "49": "15123456789",
+  "48": "501234567",
+  "34": "612345678",
+  "91": "9123456789",
 };
 
-return (
-<motion.div
-initial={{ opacity: 0, y: 40 }}
-animate={{ opacity: 1, y: 0 }}
-transition={{ duration: 0.7, ease: "easeOut" }}
-className="p-6 space-y-8 flex flex-col justify-center bg-white/80 backdrop-blur-lg rounded-xl shadow-md border border-gray-200"
-> <div className="space-y-4 text-center"> <span className="text-green-600 bg-green-100 px-3 py-1 rounded-full text-sm inline-flex items-center gap-1 mx-auto"> <Hourglass size={14} />
-{getDaysLeft()} dias restantes </span>
+const EmailForm = ({ title, endDate }: EmailFormProps) => {
+  const [isPending, startTransition] = useTransition();
+  const [isLoading, setIsLoading] = useState(false);
+  const [step, setStep] = useState<"phone" | "otp" | "challenge">("phone");
+  const [formData, setFormData] = useState({
+    name: "",
+    social: "",
+    countryCode: "258",
+    whatsapp: "",
+    challenge: "",
+    otp: "",
+  });
 
-    <h1 className="text-3xl md:text-4xl font-bold text-gray-900 flex items-center justify-center gap-2">
-      <Sparkles className="text-yellow-500 animate-pulse" size={20} />
-      {title}
-    </h1>
-    <p className="text-gray-500 text-sm">
-      Junta-te à lista de espera e ganha um desconto de 50% 🚀
-    </p>
-  </div>
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
 
-  {/* Progress bar */}
-  <div className="relative w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+  const getDaysLeft = () => {
+    if (!endDate) return 0;
+    const diff = new Date(endDate).getTime() - new Date().getTime();
+    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
+  };
+
+  const sendOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { name, whatsapp, countryCode } = formData;
+    if (!name || !whatsapp) {
+      toast.error("Por favor, preencha todos os campos!");
+      return;
+    }
+
+    const fullNumber = `${countryCode}${whatsapp.replace(/\D/g, "")}`;
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/otp/send-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullNumber, name }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("✅ OTP enviado para o WhatsApp!");
+        setStep("otp");
+      } else {
+        toast.error(data.error || "Algo correu mal 😢");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao enviar OTP 😢");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const verifyOtp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { countryCode, whatsapp, otp } = formData;
+    if (!otp) {
+      toast.error("Insira o código OTP!");
+      return;
+    }
+
+    const fullNumber = `${countryCode}${whatsapp.replace(/\D/g, "")}`;
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/otp/verify-otp`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullNumber, otp }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("✅ Código verificado com sucesso!");
+        setStep("challenge"); // show challenge textbox now
+      } else {
+        toast.error(data.error || "Código inválido");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao verificar OTP 😢");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendChallenge = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const { name, whatsapp, countryCode, challenge } = formData;
+    if (!challenge) {
+      toast.error("Por favor, escreve o desafio!");
+      return;
+    }
+
+    const fullNumber = `${countryCode}${whatsapp.replace(/\D/g, "")}`;
+    setIsLoading(true);
+
+    try {
+      const res = await fetch(`${BACKEND_URL}/otp/send-offer`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ phone: fullNumber, name }),
+      });
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success("✅ Mensagem de oferta enviada com sucesso!");
+        setFormData({
+          name: "",
+          social: "",
+          countryCode: "258",
+          whatsapp: "",
+          challenge: "",
+          otp: "",
+        });
+        setStep("phone");
+      } else {
+        toast.error(data.error || "Erro ao enviar mensagem");
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erro ao enviar mensagem 😢");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  return (
     <motion.div
-      className="absolute left-0 top-0 h-full bg-gradient-to-r from-indigo-500 to-blue-500"
-      initial={{ width: 0 }}
-      animate={{ width: `${progress}%` }}
-      transition={{ duration: 0.4 }}
-    />
-  </div>
-
-  <form
-    onSubmit={handleSubmit}
-    action="https://formspree.io/f/mdknweok"
-    method="POST"
-    className="space-y-5"
-  >
-    {/* Nome */}
-    <div>
-      <Label htmlFor="name">Nome Completo</Label>
-      <div className="relative">
-        <Input
-          type="text"
-          name="name"
-          id="name"
-          required
-          value={formData.name}
-          onChange={handleInputChange}
-          placeholder="Denise Novele"
-          className="pr-10"
-        />
-        <User className="absolute right-3 top-2.5 text-gray-400" size={16} />
-      </div>
-    </div>
-
-    {/* Email */}
-    <div>
-      <Label htmlFor="email">E-mail</Label>
-      <div className="relative">
-        <Input
-          type="email"
-          name="email"
-          id="email"
-          required
-          value={formData.email}
-          onChange={handleInputChange}
-          placeholder="denise.novele@exemplo.com"
-          className="pr-10"
-        />
-        <Mail className="absolute right-3 top-2.5 text-gray-400" size={16} />
-      </div>
-    </div>
-
-    {/* Desafio (Textarea) */}
-    <div>
-      <Label htmlFor="text">Conte-nos:</Label>
-      <div className="relative">
-        <textarea
-          name="text"
-          id="text"
-          required
-          value={formData.text}
-          onChange={handleInputChange}
-          placeholder="Partilha um desafio que encontras ou que encontraste no acesso ao ensino superior..."
-          className="w-full min-h-[120px] resize-none border rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-        />
-        <Lightbulb
-          className="absolute right-3 top-3 text-gray-400"
-          size={18}
-        />
-      </div>
-    </div>
-
-    <Button
-      disabled={isPending || isLoading}
-      type="submit"
-      className="w-full py-6 text-base font-semibold relative overflow-hidden group"
+      initial={{ opacity: 0, y: 40 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.7, ease: "easeOut" }}
+      className="p-6 space-y-8 flex flex-col justify-center bg-white/80 backdrop-blur-lg rounded-xl shadow-md border border-gray-200"
     >
-      <span
-        className={`transition-all ${
-          isPending || isLoading ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        Entrar na lista de espera
-      </span>
-      {(isPending || isLoading) && (
-        <div className="absolute inset-0 flex items-center justify-center">
-          <LoaderCircle className="animate-spin" size={20} />
+      {endDate && (
+        <div className="text-center">
+          <span className="text-green-600 bg-green-100 px-3 py-1 rounded-full text-sm inline-flex items-center gap-1">
+            <Hourglass size={14} /> {getDaysLeft()} dias restantes
+          </span>
         </div>
       )}
-    </Button>
-  </form>
 
-  <div className="text-center text-sm text-gray-400 mt-2 flex items-center justify-center gap-1">
-    <Smile size={14} />
-    Mal podemos esperar por poder te ajudar!
-  </div>
-</motion.div>
+      <h1 className="text-3xl font-bold text-gray-900 flex items-center justify-center gap-2">
+        {title}
+      </h1>
 
-);
+      {step === "phone" && (
+        <form onSubmit={sendOtp} className="space-y-5">
+          <div>
+            <Label htmlFor="name">Nome</Label>
+            <div className="relative">
+              <Input type="text" name="name" value={formData.name} onChange={handleChange} placeholder="Denise Novele" className="pr-10"/>
+              <User className="absolute right-3 top-2.5 text-gray-400" size={16}/>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="social">@ social</Label>
+            <div className="relative">
+              <Input type="text" name="social" value={formData.social} onChange={handleChange} placeholder="@danis.wh0" className="pr-10"/>
+              <AtSign className="absolute right-3 top-2.5 text-gray-400" size={16}/>
+            </div>
+          </div>
+
+          <div>
+            <Label htmlFor="whatsapp">WhatsApp</Label>
+            <div className="flex gap-2 relative">
+              <select name="countryCode" value={formData.countryCode} onChange={handleChange} className="border rounded-md px-2 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400">
+                {Object.keys(countryPlaceholders).map(code => (
+                  <option key={code} value={code}>{code}</option>
+                ))}
+              </select>
+              <Input type="tel" name="whatsapp" value={formData.whatsapp} onChange={handleChange} placeholder={countryPlaceholders[formData.countryCode]} className="flex-1 pr-10"/>
+              <Phone className="absolute right-3 top-2.5 text-gray-400" size={16}/>
+            </div>
+          </div>
+
+          <Button disabled={isPending || isLoading} type="submit" className="w-full py-6 text-base font-semibold relative overflow-hidden group">
+            {isPending || isLoading ? <LoaderCircle className="animate-spin mx-auto" size={20}/> : "Receber OTP"}
+          </Button>
+        </form>
+      )}
+
+      {step === "otp" && (
+        <form onSubmit={verifyOtp} className="space-y-4">
+          <Label htmlFor="otp">Código OTP</Label>
+          <Input type="text" name="otp" value={formData.otp} onChange={handleChange} placeholder="Ex: 123456" maxLength={6} className="text-center"/>
+          <Button type="submit" disabled={isPending || isLoading} className="w-full py-6">
+            {isPending || isLoading ? <LoaderCircle className="animate-spin mx-auto" size={20}/> : "Verificar OTP"}
+          </Button>
+        </form>
+      )}
+
+      {step === "challenge" && (
+        <form onSubmit={sendChallenge} className="space-y-4">
+          <Label htmlFor="challenge">Conta-nos um desafio</Label>
+          <div className="relative">
+            <textarea name="challenge" value={formData.challenge} onChange={handleChange} placeholder="Partilha um desafio que encontraste ou estás a enfrentar no acesso ao ensino superior..." className="w-full min-h-[120px] resize-none border rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"/>
+            <Lightbulb className="absolute right-3 top-3 text-gray-400" size={18}/>
+          </div>
+          <Button type="submit" disabled={isPending || isLoading} className="w-full py-6">
+            {isPending || isLoading ? <LoaderCircle className="animate-spin mx-auto" size={20}/> : "Enviar"}
+          </Button>
+        </form>
+      )}
+
+      <div className="text-center text-sm text-gray-400 mt-2 flex items-center justify-center gap-1">
+        <Smile size={14}/> Mal podemos esperar por te ajudar!
+      </div>
+    </motion.div>
+  );
 };
 
 export default EmailForm;
