@@ -33,7 +33,7 @@ export default function Home() {
             />
           </div>
           <div className="md:order-2 order-1">
-            <EmailForm date={date} title={title} />
+            <EmailForm endDate={date} title={title} />
           </div>
         </div>
 
