@@ -8,7 +8,7 @@ export default function Home() {
   const features = "Seleciona o Curso Perfeito, Teste Vocacional, Bolsas de Estudo, Suporte Personalizado";
   const price = "200";
   const discountPrice = "100";
-  const date = "2025-11-01";
+  const date = "2025-11-03";
   const title =
     "Entre na lista de espera do Trilho Académico.";
   const description = "Desconto exclusivo de 50% no lançamento para membros da lista de espera, valido por um mês.";
